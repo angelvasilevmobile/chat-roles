@@ -1,11 +1,12 @@
 import { Trash2 } from "lucide-react";
 import type { ChatMessage } from "@/hooks/useMessages";
+import type { RoomMessage } from "@/hooks/useRoomMessages";
 import type { UserRole } from "@/hooks/useAuth";
 import RoleBadge from "./RoleBadge";
 import { format } from "date-fns";
 
 interface MessageItemProps {
-  message: ChatMessage;
+  message: ChatMessage | RoomMessage;
   currentUserId: string;
   isAdmin: boolean;
   userRoles: Map<string, UserRole>;
