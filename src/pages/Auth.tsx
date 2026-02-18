@@ -12,6 +12,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [adminCode, setAdminCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -26,7 +27,7 @@ const Auth = () => {
         if (error) throw error;
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -35,10 +36,30 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast({
-          title: "Check your email",
-          description: "We sent you a confirmation link to verify your account.",
-        });
+
+        // If admin code provided and signup succeeded, verify it
+        if (adminCode && data.session) {
+          const { error: adminError } = await supabase.functions.invoke("verify-admin-code", {
+            body: { admin_code: adminCode },
+          });
+          if (adminError) {
+            toast({
+              title: "Admin code invalid",
+              description: "Account created as regular user. The admin code was incorrect.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Admin account created",
+              description: "You've been registered as an admin.",
+            });
+          }
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We sent you a confirmation link to verify your account.",
+          });
+        }
       }
     } catch (error: any) {
       toast({
@@ -68,18 +89,31 @@ const Auth = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-foreground/80">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Choose a username"
-                required={!isLogin}
-                className="bg-card border-border focus:ring-primary"
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-foreground/80">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Choose a username"
+                  required={!isLogin}
+                  className="bg-card border-border focus:ring-primary"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="adminCode" className="text-foreground/80">Admin Code <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input
+                  id="adminCode"
+                  type="password"
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
+                  placeholder="Enter admin code if you have one"
+                  className="bg-card border-border focus:ring-primary"
+                />
+              </div>
+            </>
           )}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-foreground/80">Email</Label>
