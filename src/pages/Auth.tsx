@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { MessageCircle } from "lucide-react";
 
@@ -12,6 +13,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState("no");
   const [adminCode, setAdminCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -37,8 +39,8 @@ const Auth = () => {
         });
         if (error) throw error;
 
-        // If admin code provided and signup succeeded, verify it
-        if (adminCode && data.session) {
+        // If admin selected and signup succeeded, verify the code
+        if (isAdmin === "yes" && adminCode && data.session) {
           const { error: adminError } = await supabase.functions.invoke("verify-admin-code", {
             body: { admin_code: adminCode },
           });
@@ -54,12 +56,9 @@ const Auth = () => {
               description: "You've been registered as an admin.",
             });
           }
-        } else {
-          toast({
-            title: "Check your email",
-            description: "We sent you a confirmation link to verify your account.",
-          });
         }
+
+        navigate("/");
       }
     } catch (error: any) {
       toast({
@@ -103,16 +102,31 @@ const Auth = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="adminCode" className="text-foreground/80">Admin Code <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                <Input
-                  id="adminCode"
-                  type="password"
-                  value={adminCode}
-                  onChange={(e) => setAdminCode(e.target.value)}
-                  placeholder="Enter admin code if you have one"
-                  className="bg-card border-border focus:ring-primary"
-                />
+                <Label className="text-foreground/80">Register as Admin?</Label>
+                <Select value={isAdmin} onValueChange={setIsAdmin}>
+                  <SelectTrigger className="bg-card border-border focus:ring-primary">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="yes">Yes</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              {isAdmin === "yes" && (
+                <div className="space-y-2">
+                  <Label htmlFor="adminCode" className="text-foreground/80">Admin Code</Label>
+                  <Input
+                    id="adminCode"
+                    type="password"
+                    value={adminCode}
+                    onChange={(e) => setAdminCode(e.target.value)}
+                    placeholder="Enter the admin registration code"
+                    required
+                    className="bg-card border-border focus:ring-primary"
+                  />
+                </div>
+              )}
             </>
           )}
           <div className="space-y-2">
