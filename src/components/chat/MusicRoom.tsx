@@ -90,11 +90,10 @@ const MusicRoom = () => {
         {currentTrack ? (
           <div>
             {embedUrl ? (
-              <div className="rounded-lg overflow-hidden bg-secondary">
+              <div className="rounded-lg overflow-hidden bg-secondary aspect-video">
                 <iframe
                   src={embedUrl}
-                  className="w-full"
-                  height={currentTrack.url.includes("soundcloud") ? 166 : 200}
+                  className="w-full h-full"
                   allow="autoplay; encrypted-media"
                   allowFullScreen
                   title={currentTrack.title}
