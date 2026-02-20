@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useRoomMessages } from "@/hooks/useRoomMessages";
 import { useDrawings } from "@/hooks/useDrawings";
@@ -24,6 +25,7 @@ const DrawingRoom = () => {
   const [drawing, setDrawing] = useState(false);
   const [color, setColor] = useState("#ffffff");
   const [size, setSize] = useState(4);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -160,7 +162,12 @@ const DrawingRoom = () => {
             <div className="flex gap-2 overflow-x-auto pb-1">
               {drawings.slice(0, 10).map((d) => (
                 <div key={d.id} className="relative group shrink-0">
-                  <img src={d.image_url} alt={d.title ?? "Drawing"} className="h-16 w-24 object-cover rounded-lg border border-border" />
+                  <img
+                    src={d.image_url}
+                    alt={d.title ?? "Drawing"}
+                    className="h-16 w-24 object-cover rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setSelectedImage(d.image_url)}
+                  />
                   {(d.user_id === user?.id || isAdmin) && (
                     <button
                       onClick={() => deleteDrawing(d.id)}
@@ -202,6 +209,14 @@ const DrawingRoom = () => {
       </div>
 
       <MessageInput onSend={(content) => user && sendMessage(content, user.id)} />
+
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-3xl p-2">
+          {selectedImage && (
+            <img src={selectedImage} alt="Drawing" className="w-full h-auto rounded-lg" />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
