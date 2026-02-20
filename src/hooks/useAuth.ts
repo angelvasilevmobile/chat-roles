@@ -47,8 +47,14 @@ export const useAuth = () => {
       }
     );
 
+    // Timeout fallback to prevent infinite loading
+    const timeout = setTimeout(() => setLoading(false), 5000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setLoading(false);
+      if (!session) {
+        clearTimeout(timeout);
+        setLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
