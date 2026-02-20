@@ -17,47 +17,63 @@ export const useAuth = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchUserData = async (userId: string) => {
+      try {
+        const [{ data: roleData }, { data: profileData }] = await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+          supabase.from("profiles").select("id, username, avatar_url").eq("id", userId).maybeSingle(),
+        ]);
+        if (!isMounted) return;
+        setRole((roleData?.role as UserRole) ?? "user");
+        setProfile(profileData);
+      } catch {
+        if (!isMounted) return;
+        setRole("user");
+        setProfile(null);
+      }
+    };
+
+    // Set up listener FIRST — but avoid awaiting Supabase calls inside callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        if (!isMounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
 
         if (currentUser) {
-          // Fetch role
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", currentUser.id)
-            .maybeSingle();
-          setRole((roleData?.role as UserRole) ?? "user");
-
-          // Fetch profile
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("id, username, avatar_url")
-            .eq("id", currentUser.id)
-            .maybeSingle();
-          setProfile(profileData);
+          // Dispatch after callback to avoid deadlock
+          setTimeout(() => fetchUserData(currentUser.id), 0);
         } else {
           setRole("user");
           setProfile(null);
         }
-
-        setLoading(false);
       }
     );
 
-    // Timeout fallback to prevent infinite loading
-    const timeout = setTimeout(() => setLoading(false), 5000);
+    // Initial load
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        clearTimeout(timeout);
-        setLoading(false);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await fetchUserData(session.user.id);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
