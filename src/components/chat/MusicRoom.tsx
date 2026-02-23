@@ -38,6 +38,7 @@ const MusicRoom = () => {
       setTitle("");
       setUrl("");
       setShowAdd(false);
+      setCurrentIndex(0); // new track appears first (ordered by created_at desc)
       toast.success("Track added!");
     } catch {
       toast.error("Failed to add track");
