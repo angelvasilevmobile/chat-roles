@@ -5,7 +5,7 @@ import { useMusicTracks } from "@/hooks/useMusicTracks";
 import { useUsers } from "@/hooks/useUsers";
 import MessageItem from "./MessageItem";
 import MessageInput from "./MessageInput";
-import { Music, Plus, Trash2, ExternalLink } from "lucide-react";
+import { Music, Plus, Trash2, ExternalLink, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -20,6 +20,11 @@ const MusicRoom = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex >= tracks.length && tracks.length > 0) setCurrentIndex(0);
+  }, [tracks, currentIndex]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -40,18 +45,19 @@ const MusicRoom = () => {
   };
 
   const getEmbedUrl = (rawUrl: string) => {
-    // YouTube
     const ytMatch = rawUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
     if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-    // SoundCloud - use their oEmbed widget
     if (rawUrl.includes("soundcloud.com")) {
       return `https://w.soundcloud.com/player/?url=${encodeURIComponent(rawUrl)}&color=%23ff5500&auto_play=false`;
     }
     return null;
   };
 
-  const currentTrack = tracks[0];
+  const currentTrack = tracks.length > 0 ? tracks[currentIndex] : null;
   const embedUrl = currentTrack ? getEmbedUrl(currentTrack.url) : null;
+
+  const goPrev = () => setCurrentIndex((i) => (i - 1 + tracks.length) % tracks.length);
+  const goNext = () => setCurrentIndex((i) => (i + 1) % tracks.length);
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full">
@@ -106,11 +112,24 @@ const MusicRoom = () => {
             )}
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-muted-foreground">🎵 {currentTrack.title}</p>
-              {isAdmin && (
-                <button onClick={() => deleteTrack(currentTrack.id)} className="text-destructive/60 hover:text-destructive p-1">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
+              <div className="flex items-center gap-1">
+                {tracks.length > 1 && (
+                  <>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goPrev}>
+                      <SkipBack className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="text-[10px] text-muted-foreground">{currentIndex + 1}/{tracks.length}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goNext}>
+                      <SkipForward className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
+                {isAdmin && (
+                  <button onClick={() => deleteTrack(currentTrack.id)} className="text-destructive/60 hover:text-destructive p-1">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -121,11 +140,11 @@ const MusicRoom = () => {
         {tracks.length > 1 && (
           <div className="mt-3 space-y-1">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Queue</p>
-            {tracks.slice(1, 6).map((t) => (
-              <div key={t.id} className="flex items-center justify-between text-xs text-foreground/70 px-2 py-1 rounded hover:bg-secondary/50">
+            {tracks.map((t, idx) => idx === currentIndex ? null : (
+              <div key={t.id} className="flex items-center justify-between text-xs text-foreground/70 px-2 py-1 rounded hover:bg-secondary/50 cursor-pointer" onClick={() => setCurrentIndex(idx)}>
                 <span>🎵 {t.title}</span>
                 {isAdmin && (
-                  <button onClick={() => deleteTrack(t.id)} className="text-destructive/60 hover:text-destructive">
+                  <button onClick={(e) => { e.stopPropagation(); deleteTrack(t.id); }} className="text-destructive/60 hover:text-destructive">
                     <Trash2 className="h-3 w-3" />
                   </button>
                 )}
