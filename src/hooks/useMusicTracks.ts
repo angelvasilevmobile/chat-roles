@@ -35,7 +35,8 @@ export const useMusicTracks = () => {
   }, [fetchTracks]);
 
   const addTrack = async (title: string, url: string, userId: string) => {
-    await supabase.from("music_tracks").insert({ title, url, user_id: userId });
+    const { error } = await supabase.from("music_tracks").insert({ title, url, user_id: userId });
+    if (error) throw error;
   };
 
   const deleteTrack = async (trackId: string) => {
