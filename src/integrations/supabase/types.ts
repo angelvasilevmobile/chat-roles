@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      beds: {
+        Row: {
+          bed_number: number
+          id: string
+          is_occupied: boolean
+          label: string | null
+          notes: string | null
+          patient_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          bed_number: number
+          id?: string
+          is_occupied?: boolean
+          label?: string | null
+          notes?: string | null
+          patient_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bed_number?: number
+          id?: string
+          is_occupied?: boolean
+          label?: string | null
+          notes?: string | null
+          patient_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drawings: {
         Row: {
           created_at: string

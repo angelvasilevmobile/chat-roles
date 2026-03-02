@@ -10,11 +10,12 @@ import MusicRoom from "@/components/chat/MusicRoom";
 import DrawingRoom from "@/components/chat/DrawingRoom";
 import StoriesRoom from "@/components/chat/StoriesRoom";
 import ContactRoom from "@/components/chat/ContactRoom";
-import { LogOut, MessageCircle, Music, Paintbrush, BookOpen, Sparkles, Trash2, Phone } from "lucide-react";
+import BedRoom from "@/components/chat/BedRoom";
+import { LogOut, MessageCircle, Music, Paintbrush, BookOpen, Sparkles, Trash2, Phone, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RoleBadge from "@/components/chat/RoleBadge";
 
-type RoomTab = "general" | "music" | "drawing" | "stories" | "contact";
+type RoomTab = "general" | "music" | "drawing" | "stories" | "contact" | "beds";
 
 const TABS: { id: RoomTab; label: string; icon: React.ReactNode }[] = [
   { id: "general", label: "General", icon: <MessageCircle className="h-4 w-4" /> },
@@ -22,6 +23,7 @@ const TABS: { id: RoomTab; label: string; icon: React.ReactNode }[] = [
   { id: "drawing", label: "Drawing", icon: <Paintbrush className="h-4 w-4" /> },
   { id: "stories", label: "Stories", icon: <BookOpen className="h-4 w-4" /> },
   { id: "contact", label: "Contact", icon: <Phone className="h-4 w-4" /> },
+  { id: "beds", label: "Beds", icon: <BedDouble className="h-4 w-4" /> },
 ];
 
 const ChatRoom = () => {
@@ -77,6 +79,7 @@ const ChatRoom = () => {
         {activeTab === "drawing" && <DrawingRoom />}
         {activeTab === "stories" && <StoriesRoom />}
         {activeTab === "contact" && <ContactRoom />}
+        {activeTab === "beds" && <BedRoom />}
       </div>
 
       <UserSidebar
