@@ -23,6 +23,7 @@ const TABS: { id: RoomTab; label: string; icon: React.ReactNode }[] = [
   { id: "drawing", label: "Drawing", icon: <Paintbrush className="h-4 w-4" /> },
   { id: "stories", label: "Stories", icon: <BookOpen className="h-4 w-4" /> },
   { id: "contact", label: "Contact", icon: <Phone className="h-4 w-4" /> },
+  { id: "beds", label: "Beds", icon: <BedDouble className="h-4 w-4" /> },
 ];
 
 const ChatRoom = () => {
