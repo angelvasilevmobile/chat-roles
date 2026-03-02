@@ -15,7 +15,7 @@ import { LogOut, MessageCircle, Music, Paintbrush, BookOpen, Sparkles, Trash2, P
 import { Button } from "@/components/ui/button";
 import RoleBadge from "@/components/chat/RoleBadge";
 
-type RoomTab = "general" | "music" | "drawing" | "stories" | "contact";
+type RoomTab = "general" | "music" | "drawing" | "stories" | "contact" | "beds";
 
 const TABS: { id: RoomTab; label: string; icon: React.ReactNode }[] = [
   { id: "general", label: "General", icon: <MessageCircle className="h-4 w-4" /> },
