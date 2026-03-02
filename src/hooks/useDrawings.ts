@@ -7,6 +7,7 @@ export interface Drawing {
   title: string | null;
   image_url: string;
   created_at: string;
+  username?: string;
 }
 
 export const useDrawings = () => {
