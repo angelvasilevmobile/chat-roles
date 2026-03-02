@@ -16,10 +16,15 @@ export const useDrawings = () => {
   const fetchDrawings = useCallback(async () => {
     const { data } = await supabase
       .from("drawings")
-      .select("*")
+      .select("*, profiles:user_id(username)")
       .order("created_at", { ascending: false })
       .limit(50);
-    if (data) setDrawings(data);
+    if (data) {
+      setDrawings(data.map((d: any) => ({
+        ...d,
+        username: d.profiles?.username ?? "Unknown",
+      })));
+    }
     setLoading(false);
   }, []);
 
