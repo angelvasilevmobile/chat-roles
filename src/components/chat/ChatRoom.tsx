@@ -10,7 +10,8 @@ import MusicRoom from "@/components/chat/MusicRoom";
 import DrawingRoom from "@/components/chat/DrawingRoom";
 import StoriesRoom from "@/components/chat/StoriesRoom";
 import ContactRoom from "@/components/chat/ContactRoom";
-import { LogOut, MessageCircle, Music, Paintbrush, BookOpen, Sparkles, Trash2, Phone } from "lucide-react";
+import BedRoom from "@/components/chat/BedRoom";
+import { LogOut, MessageCircle, Music, Paintbrush, BookOpen, Sparkles, Trash2, Phone, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RoleBadge from "@/components/chat/RoleBadge";
 
