@@ -6,7 +6,7 @@ import { useDrawings } from "@/hooks/useDrawings";
 import { useUsers } from "@/hooks/useUsers";
 import MessageItem from "./MessageItem";
 import MessageInput from "./MessageInput";
-import { Paintbrush, Save, Trash2, RotateCcw } from "lucide-react";
+import { Paintbrush, Save, Trash2, RotateCcw, Undo2, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -25,8 +25,10 @@ const DrawingRoom = () => {
   const [drawing, setDrawing] = useState(false);
   const [color, setColor] = useState("#ffffff");
   const [size, setSize] = useState(4);
+  const [isEraser, setIsEraser] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
+  const historyRef = useRef<ImageData[]>([]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -39,7 +41,24 @@ const DrawingRoom = () => {
     if (!ctx) return;
     ctx.fillStyle = "hsl(228, 14%, 11%)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Save initial state
+    historyRef.current = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
   }, []);
+
+  const saveHistory = () => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !canvasRef.current) return;
+    historyRef.current.push(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
+    if (historyRef.current.length > 50) historyRef.current.shift();
+  };
+
+  const handleUndo = () => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || historyRef.current.length <= 1) return;
+    historyRef.current.pop();
+    const prev = historyRef.current[historyRef.current.length - 1];
+    ctx.putImageData(prev, 0, 0);
+  };
 
   const getPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -50,6 +69,7 @@ const DrawingRoom = () => {
   };
 
   const startDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    saveHistory();
     setDrawing(true);
     lastPos.current = getPos(e);
   };
@@ -60,7 +80,15 @@ const DrawingRoom = () => {
       const ctx = canvasRef.current.getContext("2d");
       if (!ctx || !lastPos.current) return;
       const pos = getPos(e);
-      ctx.strokeStyle = color;
+
+      if (isEraser) {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.strokeStyle = "rgba(0,0,0,1)";
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = color;
+      }
+
       ctx.lineWidth = size;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -68,9 +96,10 @@ const DrawingRoom = () => {
       ctx.moveTo(lastPos.current.x, lastPos.current.y);
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
       lastPos.current = pos;
     },
-    [drawing, color, size]
+    [drawing, color, size, isEraser]
   );
 
   const stopDraw = () => {
@@ -81,6 +110,7 @@ const DrawingRoom = () => {
   const clearCanvas = () => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx || !canvasRef.current) return;
+    saveHistory();
     ctx.fillStyle = "hsl(228, 14%, 11%)";
     ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
   };
@@ -108,6 +138,9 @@ const DrawingRoom = () => {
             <h2 className="text-sm font-semibold font-heading text-foreground">Drawing Canvas</h2>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleUndo} title="Undo">
+              <Undo2 className="h-3.5 w-3.5 mr-1" /> Undo
+            </Button>
             <Button variant="ghost" size="sm" onClick={clearCanvas}>
               <RotateCcw className="h-3.5 w-3.5 mr-1" /> Clear
             </Button>
@@ -118,17 +151,26 @@ const DrawingRoom = () => {
         </div>
 
         {/* Tools */}
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-2 flex-wrap">
           <div className="flex items-center gap-1">
             {COLORS.map((c) => (
               <button
                 key={c}
-                onClick={() => setColor(c)}
-                className={`h-6 w-6 rounded-full border-2 transition-transform ${color === c ? "border-primary scale-110" : "border-transparent"}`}
+                onClick={() => { setColor(c); setIsEraser(false); }}
+                className={`h-6 w-6 rounded-full border-2 transition-transform ${color === c && !isEraser ? "border-primary scale-110" : "border-transparent"}`}
                 style={{ backgroundColor: c }}
               />
             ))}
           </div>
+          <div className="h-4 w-px bg-border" />
+          <button
+            onClick={() => setIsEraser(!isEraser)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isEraser ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-secondary"}`}
+            title="Eraser"
+          >
+            <Eraser className="h-4 w-4" />
+            Eraser
+          </button>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-1">
             {SIZES.map((s) => (
@@ -168,6 +210,9 @@ const DrawingRoom = () => {
                     className="h-16 w-24 object-cover rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => setSelectedImage(d.image_url)}
                   />
+                  <p className="text-[9px] text-muted-foreground text-center mt-0.5 truncate w-24">
+                    {d.username ?? "Unknown"}
+                  </p>
                   {(d.user_id === user?.id || isAdmin) && (
                     <button
                       onClick={() => deleteDrawing(d.id)}

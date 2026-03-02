@@ -7,6 +7,7 @@ export interface Drawing {
   title: string | null;
   image_url: string;
   created_at: string;
+  username?: string;
 }
 
 export const useDrawings = () => {
@@ -16,10 +17,15 @@ export const useDrawings = () => {
   const fetchDrawings = useCallback(async () => {
     const { data } = await supabase
       .from("drawings")
-      .select("*")
+      .select("*, profiles:user_id(username)")
       .order("created_at", { ascending: false })
       .limit(50);
-    if (data) setDrawings(data);
+    if (data) {
+      setDrawings(data.map((d: any) => ({
+        ...d,
+        username: d.profiles?.username ?? "Unknown",
+      })));
+    }
     setLoading(false);
   }, []);
 
