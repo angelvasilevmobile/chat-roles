@@ -79,6 +79,7 @@ const ChatRoom = () => {
         {activeTab === "drawing" && <DrawingRoom />}
         {activeTab === "stories" && <StoriesRoom />}
         {activeTab === "contact" && <ContactRoom />}
+        {activeTab === "beds" && <BedRoom />}
       </div>
 
       <UserSidebar
